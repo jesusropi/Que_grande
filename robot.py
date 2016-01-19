@@ -1,3 +1,8 @@
+"""
+	Create at ./output/ all paths as in www.quegrande.org and it save all documents
+	in the same sort. 
+"""
+import os
 import urllib2
 import sys
 
@@ -8,49 +13,70 @@ URL = 'http://quegrande.org/apuntes/ETIS/'
 OUTPUT = 'output'
 
 
-def get_html(url):
-	req = urllib2.Request(url)
-	r = urllib2.urlopen(req)
-	page = r.read()
-	return page
+def get_content(url):
+	request = urllib2.Request(url)
+	if request is not None:
+		open_req = urllib2.urlopen(request)
+		html = open_req.read()
+		return html
+	else:
+		print 'Error URL: %s' % url
 
 
-#TODO
-def is_doc(url):
-	"""True if the next step is a final document"""
+def get_links(html):
+	urls = []
+	soup = BeautifulSoup(html, 'html.parser')
+	links = soup.find_all('a')
+	if links:
+		for l in links:
+			urls.append(l.get('href'))
+	return urls	
+
+#TO_DO
+def create_folder():
 	pass
 
-#TODO
-def get_next_steps(html):
-	"""Return list of next urls"""
-	urls = []
-
-#TODO
-def get_all_docs(url):
-	"""Download all documents"""
-	html = get_html(url)
-	steps = get_next_steps(html)
-	for s in steps:
-		get_all_docs(s)
+def is_doc(url):
+	print url
+	path, ext = os.path.splitext(url)
+	print path
+	print ext
+	if ext:
+		return True
+	return False
 
 
 def main(url):
-	get_all_docs(url)
+	# 1. Dame contenido de url
+	html = get_content(url)
+	# 2. Dame enlaces de url
+	links = get_links(html)
+	# 3. Casos:
+	#	3.1 Si solo 4 enlaces, fin. 
+	#	3.2 Si no:
+	#		- Por cada enlace:
+	#			Si es documento, lo descarga: 
+	#				+ Revisa si hay directorio de url, si no, lo crea
+	#				+ Guarda ahi el documento
+	#			Si es enlace:
+	#				+ Crea path
+	#				+ main(url)
+	if len(links) != 4: # There isnt more steps
+		for l in links:
+			#create_folder(l)
+			if is_doc(l):
+				print 'DOC: %s' % l
+				#save_doc(path, f)
+			else:
+				print 'PATH: %s' % l
+				main(l)
+	else:
+		print 'Final page whithout links: %s' % url
 
 #TODO
 if __name__ == '__main__':
 	u = 'http://quegrande.org/apuntes/ETIS'
-	request = urllib2.Request(u)
-	r = urllib2.urlopen(request)
-	html = r.read()
-	soup = BeautifulSoup(html, 'html.parser')
-	links = soup.find_all('a')
-	if len(links) > 4:
-		links = links[5:]
-		for l in links:
-			print l
-	else:
-		print 'Error: number of links!'
+	main(u)
 
 	#main(URL)
 	#doc = get_html('http://quegrande.org/apuntes/ETIS/1/Alx/teoria/07-08/tema_1_-_estructuras_algebraicas.pdf')
