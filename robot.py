@@ -30,22 +30,24 @@ def get_links(html):
 	if links:
 		for l in links:
 			urls.append(l.get('href'))
-	return urls	
+	return urls[5:]	
 
-#TO_DO
-def create_folder():
+#TODO
+def create_folder(directory):
+	if not os.path.exists(directory):
+		os.makedirs(directory)	
+
+#TODO
+def save_doc():
 	pass
 
 def is_doc(url):
-	print url
 	path, ext = os.path.splitext(url)
-	print path
-	print ext
 	if ext:
 		return True
 	return False
 
-
+#TODO
 def main(url):
 	# 1. Dame contenido de url
 	html = get_content(url)
@@ -61,21 +63,23 @@ def main(url):
 	#			Si es enlace:
 	#				+ Crea path
 	#				+ main(url)
-	if len(links) != 4: # There isnt more steps
+	if len(links) != 5: # There isnt more steps
 		for l in links:
-			#create_folder(l)
+			create_folder(l)
+			url_next = url
 			if is_doc(l):
 				print 'DOC: %s' % l
 				#save_doc(path, f)
 			else:
-				print 'PATH: %s' % l
-				main(l)
+				url_next = url_next + l
+				print 'PATH: %s' % url
+				main(url_next)
 	else:
 		print 'Final page whithout links: %s' % url
 
 #TODO
 if __name__ == '__main__':
-	u = 'http://quegrande.org/apuntes/ETIS'
+	u = 'http://quegrande.org/apuntes/ETIS/'
 	main(u)
 
 	#main(URL)
