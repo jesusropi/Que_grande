@@ -1,6 +1,6 @@
 """
-	Create at ./output/ all paths as in www.quegrande.org and it save all documents
-	in the same sort. 
+	Create at ./ all paths as in www.quegrande.org and download and save all 
+	documents in the same sort. 
 """
 import os
 import urllib2
@@ -10,10 +10,10 @@ from bs4 import BeautifulSoup
 
 
 URL = 'http://quegrande.org/apuntes/ETIS/'
-OUTPUT = 'output'
 
 
 def get_content(url):
+	"""Get content html from url"""
 	request = urllib2.Request(url)
 	if request is not None:
 		open_req = urllib2.urlopen(request)
@@ -24,6 +24,7 @@ def get_content(url):
 
 
 def get_links(html):
+	"""Get all a html tag from html page"""
 	urls = []
 	soup = BeautifulSoup(html, 'html.parser')
 	links = soup.find_all('a')
@@ -32,58 +33,50 @@ def get_links(html):
 			urls.append(l.get('href'))
 	return urls[5:]	
 
-#TODO
+
 def create_folder(directory):
+	"""Create directory"""
 	if not os.path.exists(directory):
 		os.makedirs(directory)	
 
-#TODO
-def save_doc():
-	pass
+
+def save_doc(path, name_doc, link_doc):
+	"""Download name_doc from link_doc and save it at ./path"""
+	u = urllib2.urlopen(link_doc)
+	content = u.read()
+	f = open(os.path.join(path, name_doc), 'w')
+	f.write(content)
+	f.close()
+
 
 def is_doc(url):
+	"""True if url is a documents url"""
 	path, ext = os.path.splitext(url)
 	if ext:
 		return True
 	return False
 
-#TODO
+
 def main(url):
-	# 1. Dame contenido de url
+	"""Searchs all next links from url"""
+	father = None
 	html = get_content(url)
-	# 2. Dame enlaces de url
 	links = get_links(html)
-	# 3. Casos:
-	#	3.1 Si solo 4 enlaces, fin. 
-	#	3.2 Si no:
-	#		- Por cada enlace:
-	#			Si es documento, lo descarga: 
-	#				+ Revisa si hay directorio de url, si no, lo crea
-	#				+ Guarda ahi el documento
-	#			Si es enlace:
-	#				+ Crea path
-	#				+ main(url)
-	if len(links) != 5: # There isnt more steps
+	father = url
+	if len(links) != 5: # Without links to itself page or back page
 		for l in links:
-			create_folder(l)
 			url_next = url
 			if is_doc(l):
 				print 'DOC: %s' % l
-				#save_doc(path, f)
+				save_doc(father, l, father + l)
 			else:
+				father = url_next
 				url_next = url_next + l
-				print 'PATH: %s' % url
+				create_folder(father + l)
+				print 'PATH: %s' % url_next
 				main(url_next)
-	else:
+	else: # There isnt more steps
 		print 'Final page whithout links: %s' % url
 
-#TODO
 if __name__ == '__main__':
-	u = 'http://quegrande.org/apuntes/ETIS/'
-	main(u)
-
-	#main(URL)
-	#doc = get_html('http://quegrande.org/apuntes/ETIS/1/Alx/teoria/07-08/tema_1_-_estructuras_algebraicas.pdf')
-	#f = open('salida.pdf', 'wb')
-	#f.write(doc)
-	#f.close()
+	main(URL)
